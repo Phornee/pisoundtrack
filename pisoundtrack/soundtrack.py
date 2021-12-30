@@ -52,41 +52,50 @@ class Soundtrack(ManagedClass):
 
         pyaud = pyaudio.PyAudio()
 
+        device_name = 'Micrófono (HD USB Camera)'
+        device_rate = 0
+
         info = pyaud.get_host_api_info_by_index(0)
         numdevices = info.get('deviceCount')
         for i in range(0, numdevices):
-            if (pyaud.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
-                print("Input Device id {} - {}".format(i, pyaud.get_device_info_by_host_api_device_index(0, i).get('name')))
+            device_info = pyaud.get_device_info_by_host_api_device_index(0, i)
+            if device_info.get('name') == device_name:
+                if (device_info.get('maxInputChannels')) > 0:
+                    print("Input Device id {} - {}".format(i, device_info.get('name')))
+                else:
+                    self.logger.error("Device {} has no input channels.".format(device_name))
+            else:
+                self.logger.error("Input Device {} not found.".format(device_name))
 
-        stream = pyaud.open(format=pyaudio.paInt16, channels=1, rate=44100, input_device_index=1, input=True)
-
+        stream = pyaud.open(format=pyaudio.paInt16, channels=1, rate=44100, input_device_index=2, input=True)
 
 
         while True:
-            raws = stream.read(22*1024, exception_on_overflow=False)
-            samples = numpy.fromstring(raws, dtype=numpy.int16)
-            print("{:.2f}".format(self.get_rms(samples)))
+            num_seconds = 0
+            max_read = 0
+            while num_seconds < 60:
+                raws = stream.read(44*1024, exception_on_overflow=False)
+                samples = numpy.fromstring(raws, dtype=numpy.int16)
+                rms = self.get_rms(samples)
+                if rms > max_read:
+                    max_read = rms
+                #print("{:.2f}".format(self.get_rms(samples)))
+                num_seconds += 1
 
-        if have_readings:
-            try:
-                #write_api = self.conn.write_api(write_options=SYNCHRONOUS)
-
-                json_body = [
-                    {
-                        "measurement": "DHT22",
-                        "tags": {
-                            "sensorid": self.config['id']
-                        },
-                        "time": datetime.utcnow(),
-                        "fields": {
-                            "temp": float(temp_c),
-                            "humidity": float(humidity)
-                        }
+            json_body = [
+                {
+                    "measurement": "sound",
+                    "tags": {
+                        "soundid": self.config['id']
+                    },
+                    "time": datetime.utcnow(),
+                    "fields": {
+                        "max": float(max_read)
                     }
-                ]
+                }
+            ]
+            try:
                 self.conn.write_points(json_body)
-
-                self.logger.info("Temp: {} | Humid: {}".format(temp_c, humidity))
 
             except Exception as e:
                 self.logger.error("RuntimeError: {}".format(e))

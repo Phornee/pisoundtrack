@@ -52,34 +52,40 @@ class Soundtrack(ManagedClass):
 
         pyaud = pyaudio.PyAudio()
 
-        device_name = 'Micrófono (HD USB Camera)'
+        device_name = 'Micrófono (WordForum USB   )'
         device_rate = 0
 
         info = pyaud.get_host_api_info_by_index(0)
         numdevices = info.get('deviceCount')
+        input_device = -1
         for i in range(0, numdevices):
             device_info = pyaud.get_device_info_by_host_api_device_index(0, i)
             if device_info.get('name') == device_name:
                 if (device_info.get('maxInputChannels')) > 0:
+                    sampling_rate = int(device_info.get('defaultSampleRate'))
                     print("Input Device id {} - {}".format(i, device_info.get('name')))
+                    print("Sampling Rate - {}".format(sampling_rate))
+                    input_device = i
+                    break
                 else:
                     self.logger.error("Device {} has no input channels.".format(device_name))
-            else:
-                self.logger.error("Input Device {} not found.".format(device_name))
 
-        stream = pyaud.open(format=pyaudio.paInt16, channels=1, rate=44100, input_device_index=2, input=True)
+        if input_device == -1:
+            self.logger.error("Input Device {} not found.".format(device_name))
+            return -1
 
+        stream = pyaud.open(format=pyaudio.paInt16, channels=1, rate=44100, input_device_index=input_device, input=True)
 
         while True:
             num_seconds = 0
             max_read = 0
             while num_seconds < 60:
-                raws = stream.read(44*1024, exception_on_overflow=False)
+                raws = stream.read(sampling_rate, exception_on_overflow=False)
                 samples = numpy.fromstring(raws, dtype=numpy.int16)
                 rms = self.get_rms(samples)
                 if rms > max_read:
                     max_read = rms
-                #print("{:.2f}".format(self.get_rms(samples)))
+                print("{:.2f}".format(self.get_rms(samples)))
                 num_seconds += 1
 
             json_body = [
@@ -94,13 +100,13 @@ class Soundtrack(ManagedClass):
                     }
                 }
             ]
-            try:
-                self.conn.write_points(json_body)
-
-            except Exception as e:
-                self.logger.error("RuntimeError: {}".format(e))
-                self.logger.error("influxDBURL={} | influxDBToken={}".format(self.config['influxdbconn']['url'],
-                                                                             self.config['influxdbconn']['token']))
+            # try:
+            #     self.conn.write_points(json_body)
+            #
+            # except Exception as e:
+            #     self.logger.error("RuntimeError: {}".format(e))
+            #     self.logger.error("influxDBURL={} | influxDBToken={}".format(self.config['influxdbconn']['url'],
+            #                                                                  self.config['influxdbconn']['token']))
 
 if __name__ == "__main__":
     sensors_instance = Soundtrack()

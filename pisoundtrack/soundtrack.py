@@ -50,16 +50,19 @@ class Soundtrack(ManagedClass):
         import numpy
         import pyaudio
 
+        print("Initializing Pyaudio....")
         pyaud = pyaudio.PyAudio()
 
-        device_name = 'Micrófono (WordForum USB   )'
+        device_name = u'WordForum USB: Audio (hw:2,0)'
         device_rate = 0
 
+        print("Getting devices...")
         info = pyaud.get_host_api_info_by_index(0)
         numdevices = info.get('deviceCount')
         input_device = -1
         for i in range(0, numdevices):
             device_info = pyaud.get_device_info_by_host_api_device_index(0, i)
+            print("Evaluating device {}...".format(device_info.get('name')))
             if device_info.get('name') == device_name:
                 if (device_info.get('maxInputChannels')) > 0:
                     sampling_rate = int(device_info.get('defaultSampleRate'))
@@ -80,12 +83,12 @@ class Soundtrack(ManagedClass):
             num_seconds = 0
             max_read = 0
             while num_seconds < 60:
-                raws = stream.read(sampling_rate, exception_on_overflow=False)
+                raws = stream.read(sampling_rate>>1, exception_on_overflow=False)
                 samples = numpy.fromstring(raws, dtype=numpy.int16)
                 rms = self.get_rms(samples)
                 if rms > max_read:
                     max_read = rms
-                print("{:.2f}".format(self.get_rms(samples)))
+                print("{:.2f}".format(rms))
                 num_seconds += 1
 
             json_body = [

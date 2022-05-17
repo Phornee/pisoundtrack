@@ -11,10 +11,8 @@ class Soundtrack(ManagedClass):
 
     def __init__(self):
         super().__init__(execpath=__file__)
-
-        print("1")
-
         self.logger = Logger({'modulename': self.getClassName(), 'logpath': 'log'})
+        self.logger.info("Initializing Soundtrack...")
         self.config = Config({'modulename': self.getClassName(), 'execpath': __file__})
 
         print(self.config.getDict())
@@ -55,9 +53,10 @@ class Soundtrack(ManagedClass):
         import pyaudio
 
         print("Initializing Pyaudio....")
+        self.logger.info("Initializing Pyaudio...")
         pyaud = pyaudio.PyAudio()
 
-        device_name = u'WordForum USB: Audio (hw:2,0)'
+        device_name = u'WordForum USB: Audio'
         device_rate = 0
 
         print("Getting devices...")
@@ -67,7 +66,7 @@ class Soundtrack(ManagedClass):
         for i in range(0, numdevices):
             device_info = pyaud.get_device_info_by_host_api_device_index(0, i)
             print("Evaluating device {}...".format(device_info.get('name')))
-            if device_info.get('name') == device_name:
+            if device_info.get('name').startswith(device_name):
                 if (device_info.get('maxInputChannels')) > 0:
                     sampling_rate = int(device_info.get('defaultSampleRate'))
                     print("Input Device id {} - {}".format(i, device_info.get('name')))
@@ -107,13 +106,12 @@ class Soundtrack(ManagedClass):
                     }
                 }
             ]
-            # try:
-            #     self.conn.write_points(json_body)
-            #
-            # except Exception as e:
-            #     self.logger.error("RuntimeError: {}".format(e))
-            #     self.logger.error("influxDBURL={} | influxDBToken={}".format(self.config['influxdbconn']['url'],
-            #                                                                  self.config['influxdbconn']['token']))
+            try:
+                self.conn.write_points(json_body)
+            except Exception as e:
+                self.logger.error("RuntimeError: {}".format(e))
+                self.logger.error("influxDBURL={} | influxDBToken={}".format(self.config['influxdbconn']['url'],
+                                                                             self.config['influxdbconn']['token']))
 
 if __name__ == "__main__":
     sensors_instance = Soundtrack()

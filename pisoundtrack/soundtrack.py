@@ -12,7 +12,7 @@ class Soundtrack(ManagedClass):
     def __init__(self):
         super().__init__(execpath=__file__)
 
-        self.logger = Logger({'modulename': self.getClassName(), 'logpath': 'log'})
+        self.logger = Logger({'modulename': self.getClassName(), 'logpath': 'log', 'logname': 'soundtrack'})
         self.config = Config({'modulename': self.getClassName(), 'execpath': __file__})
 
         host = self.config['influxdbconn']['host']

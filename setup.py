@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="pisoundtrack",
-    version="0.2.1",
+    version="0.2.2",
     author="Ismael Raya",
     author_email="phornee@gmail.com",
     description="Raspberry Pi Sound tracking and influx output",
@@ -23,7 +23,7 @@ setuptools.setup(
         "Topic :: Home Automation"
     ],
     install_requires=[
-        'baseutils_phornee>=0.0.12',
+        'baseutils_phornee>=0.0.17',
         'influxdb>=5.3.1',
         'numpy>=1.21.5'
     ],

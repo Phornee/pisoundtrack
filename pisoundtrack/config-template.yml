@@ -10,7 +10,7 @@ mariadbconn:
 mongodbconn:
   connstring: mongodb+srv://user:urlencodedpassword@cluster0.xxxxx.mongodb.net/defaultdatabase?retryWrites=true&w=majority"
 influxdbconn:
-  token: ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  org: +++++++++++++
-  bucket: blablabla's Bucket
-  url: https://eu-central-1-1.aws.cloud2.influxdata.com
+  host: pi00
+  bucket: hometelemetry
+  user: writer
+  password: +++++++++++++

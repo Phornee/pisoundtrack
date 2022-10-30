@@ -40,6 +40,20 @@ class Soundtrack(ManagedClass):
 
         return math.sqrt(sum_squares / block.size) / SHORT_NORMALIZE
 
+    def get_max(self, block):
+        # RMS amplitude is defined as the square root of the
+        # mean over time of the square of the amplitude.
+
+        SHORT_NORMALIZE = (1.0 / 32768.0)
+
+        # iterate over the block.
+        max_amplitude = 0.0
+        for sample in block:
+            norm_sample = sample * SHORT_NORMALIZE
+            if norm_sample > max_amplitude:
+                max_amplitude = norm_sample
+
+        return max_amplitude
 
     def sensorRead(self):
         """
@@ -87,6 +101,7 @@ class Soundtrack(ManagedClass):
                 raws = stream.read(sampling_rate >> 1, exception_on_overflow=False)
                 samples = numpy.fromstring(raws, dtype=numpy.int16)
                 rms = self.get_rms(samples)
+                rms = self.get_max(samples)
                 if rms > max_read:
                     max_read = rms
                 print("{:.2f}".format(rms))
@@ -100,7 +115,7 @@ class Soundtrack(ManagedClass):
             if silence_level > max_read:
                 decibels = 0
             else:
-                decibels = math.log10(max_read - silence_level) * 40.04
+                decibels = 20 * math.log10(max_read)
 
             json_body = [
                 {
@@ -110,7 +125,7 @@ class Soundtrack(ManagedClass):
                     },
                     "time": datetime.utcnow(),
                     "fields": {
-                        "max": float(decibels)
+                        "max": float(max_read)
                     }
                 }
             ]

@@ -7,6 +7,8 @@ from datetime import datetime
 import math
 import struct
 
+SHORT_NORMALIZE = (1.0 / 32768.0)
+
 class Soundtrack(ManagedClass):
 
     def __init__(self):
@@ -43,8 +45,6 @@ class Soundtrack(ManagedClass):
     def get_max(self, block):
         # RMS amplitude is defined as the square root of the
         # mean over time of the square of the amplitude.
-
-        SHORT_NORMALIZE = (1.0 / 32768.0)
 
         # iterate over the block.
         max_amplitude = 0.0
@@ -125,7 +125,10 @@ class Soundtrack(ManagedClass):
                     },
                     "time": datetime.utcnow(),
                     "fields": {
-                        "max": float(max_read)
+                        "max": float(max_read),
+                        "max_raw": float(max_read / SHORT_NORMALIZE),
+                        "db_raw" : 20 * math.log10(max_read),
+                        "db": 20 * math.log10(float(max_read / SHORT_NORMALIZE)),
                     }
                 }
             ]

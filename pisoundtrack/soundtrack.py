@@ -40,7 +40,7 @@ class Soundtrack(ManagedClass):
             norm_sample = sample * SHORT_NORMALIZE
             sum_squares += norm_sample * norm_sample
 
-        return math.sqrt(sum_squares / block.size) / SHORT_NORMALIZE
+        return math.sqrt(sum_squares / block.size)
 
     def get_max(self, block):
         # Ge peak sample normalized to 0..1
@@ -99,10 +99,14 @@ class Soundtrack(ManagedClass):
                 raws = stream.read(sampling_rate >> 1, exception_on_overflow=False)
                 samples = numpy.fromstring(raws, dtype=numpy.int16)
                 # rms = self.get_rms(samples)
-                rms = self.get_max(samples)
-                if rms > max_read:
-                    max_read = rms
-                print("{:.2f}".format(rms))
+                # if rms > max_read:
+                #     max_read = rms
+                # print("{:.2f}".format(rms))
+                raw_max = self.get_max(samples)
+                if raw_max > max_read:
+                    max_read = raw_max
+                print("{:.2f}".format(raw_max))
+
                 num_seconds += 1
 
             # Decibel conversion
@@ -111,7 +115,8 @@ class Soundtrack(ManagedClass):
             if silence_raw_level > max_read:
                 decibels = 0
             else:
-                decibels = 20 * math.log10(float(max_read - silence_raw_level) * SHORT_NORMALIZE)
+                # decibels = 20 * math.log10(float(max_read - silence_raw_level) * SHORT_NORMALIZE)
+                decibels = 20 * math.log10(max_read/0.00002)
 
             json_body = [
                 {

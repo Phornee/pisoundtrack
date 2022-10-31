@@ -43,13 +43,11 @@ class Soundtrack(ManagedClass):
         return math.sqrt(sum_squares / block.size) / SHORT_NORMALIZE
 
     def get_max(self, block):
-        # RMS amplitude is defined as the square root of the
-        # mean over time of the square of the amplitude.
-
+        # Ge peak sample normalized to 0..1
         # iterate over the block.
         max_amplitude = 0.0
         for sample in block:
-            norm_sample = sample * SHORT_NORMALIZE
+            norm_sample = sample
             if norm_sample > max_amplitude:
                 max_amplitude = norm_sample
 
@@ -100,7 +98,7 @@ class Soundtrack(ManagedClass):
             while num_seconds < 60:
                 raws = stream.read(sampling_rate >> 1, exception_on_overflow=False)
                 samples = numpy.fromstring(raws, dtype=numpy.int16)
-                rms = self.get_rms(samples)
+                # rms = self.get_rms(samples)
                 rms = self.get_max(samples)
                 if rms > max_read:
                     max_read = rms
@@ -108,14 +106,12 @@ class Soundtrack(ManagedClass):
                 num_seconds += 1
 
             # Decibel conversion
-            silence_level = 24
-            dog_bark_level = 200
-            dog_bark_decibel = 90
+            silence_raw_level = 280
 
-            if silence_level > max_read:
+            if silence_raw_level > max_read:
                 decibels = 0
             else:
-                decibels = 20 * math.log10(max_read)
+                decibels = 20 * math.log10(float(max_read - silence_raw_level) * SHORT_NORMALIZE)
 
             json_body = [
                 {
@@ -125,10 +121,10 @@ class Soundtrack(ManagedClass):
                     },
                     "time": datetime.utcnow(),
                     "fields": {
-                        "max": float(max_read),
-                        "max_raw": float(max_read / SHORT_NORMALIZE),
-                        "db_raw" : 20 * math.log10(max_read),
-                        "db": 20 * math.log10(float(max_read / SHORT_NORMALIZE)),
+                        "max": float(max_read * SHORT_NORMALIZE),
+                        "max_raw": float(max_read),
+                        "db_raw": 20 * math.log10(max_read),
+                        "db": decibels
                     }
                 }
             ]

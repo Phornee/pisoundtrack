@@ -8,6 +8,7 @@ import math
 import struct
 
 SHORT_NORMALIZE = (1.0 / 32768.0)
+INPUT_BLOCK_TIME = 0.05
 
 class Soundtrack(ManagedClass):
 
@@ -90,22 +91,25 @@ class Soundtrack(ManagedClass):
             self.logger.error("Input Device {} not found.".format(device_name))
             return -1
 
-        stream = pyaud.open(format=pyaudio.paInt16, channels=1, rate=44100, input_device_index=input_device, input=True)
+        input_frames_per_block = int(sampling_rate * INPUT_BLOCK_TIME)
+
+        stream = pyaud.open(format=pyaudio.paInt16, channels=1, rate=sampling_rate, input_device_index=input_device,
+                            input=True, frames_per_buffer=input_frames_per_block)
 
         while True:
             num_seconds = 0
             max_read = 0
             while num_seconds < 60:
-                raws = stream.read(sampling_rate >> 1, exception_on_overflow=False)
+                raws = stream.read(input_frames_per_block, exception_on_overflow=False)
                 samples = numpy.fromstring(raws, dtype=numpy.int16)
-                # rms = self.get_rms(samples)
-                # if rms > max_read:
-                #     max_read = rms
-                # print("{:.2f}".format(rms))
-                raw_max = self.get_max(samples)
-                if raw_max > max_read:
-                    max_read = raw_max
-                print("{:.2f}".format(raw_max))
+                rms = self.get_rms(samples)
+                if rms > max_read:
+                    max_read = rms
+                print("{:.2f}".format(rms))
+                # raw_max = self.get_max(samples)
+                # if raw_max > max_read:
+                #     max_read = raw_max
+                # print("{:.2f}".format(raw_max))
 
                 num_seconds += 1
 
@@ -126,8 +130,8 @@ class Soundtrack(ManagedClass):
                     },
                     "time": datetime.utcnow(),
                     "fields": {
-                        "max": float(max_read * SHORT_NORMALIZE),
-                        "max_raw": float(max_read),
+                        "max": float(max_read),
+                        "max_raw": float(max_read / SHORT_NORMALIZE),
                         "db_raw": 20 * math.log10(max_read),
                         "db": decibels
                     }

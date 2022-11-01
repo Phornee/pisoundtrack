@@ -134,7 +134,7 @@ class Soundtrack(ManagedClass):
                         "max": float(max_read),
                         "max_raw": float(max_read / SHORT_NORMALIZE),
                         "db_raw": 20 * math.log10(max_read),
-                        "db": decibels
+                        "db": float(decibels)
                     }
                 }
             ]

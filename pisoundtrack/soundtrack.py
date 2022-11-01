@@ -10,6 +10,7 @@ import struct
 SHORT_NORMALIZE = (1.0 / 32768.0)
 INPUT_BLOCK_TIME = 0.40
 SILENCE_SAMPLE_LEVEL = 251
+MIN_AUDIBLE_LEVEL = 0.00766  # 20 uPascals
 
 class Soundtrack(ManagedClass):
 
@@ -121,7 +122,7 @@ class Soundtrack(ManagedClass):
                 decibels = 0
             else:
                 # decibels = 20 * math.log10(float(max_read - silence_raw_level) * SHORT_NORMALIZE)
-                decibels = 20 * math.log10(max_read/0.00002)
+                decibels = 20 * math.log10(max_read/MIN_AUDIBLE_LEVEL)
 
             self.logger.info("Decibels = {}".format(decibels))
             json_body = [

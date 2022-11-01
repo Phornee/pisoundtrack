@@ -40,7 +40,7 @@ class Soundtrack(ManagedClass):
         # iterate over the block.
         sum_squares = 0.0
         for sample in block:
-            norm_sample = (sample - SILENCE_SAMPLE_LEVEL) * SHORT_NORMALIZE
+            norm_sample = sample  * SHORT_NORMALIZE
             sum_squares += norm_sample * norm_sample
 
         return math.sqrt(sum_squares / block.size)

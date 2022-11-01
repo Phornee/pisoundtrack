@@ -122,6 +122,7 @@ class Soundtrack(ManagedClass):
                 # decibels = 20 * math.log10(float(max_read - silence_raw_level) * SHORT_NORMALIZE)
                 decibels = 20 * math.log10(max_read/0.00002)
 
+            self.logger.info("Decibels = {}".format(decibels))
             json_body = [
                 {
                     "measurement": "sound",

@@ -8,7 +8,7 @@ import math
 import struct
 
 SHORT_NORMALIZE = (1.0 / 32768.0)
-INPUT_BLOCK_TIME = 0.05
+INPUT_BLOCK_TIME = 0.40
 
 class Soundtrack(ManagedClass):
 

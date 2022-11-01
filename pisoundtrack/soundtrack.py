@@ -10,7 +10,7 @@ import struct
 SHORT_NORMALIZE = (1.0 / 32768.0)
 INPUT_BLOCK_TIME = 0.10
 SILENCE_SAMPLE_LEVEL = 251
-MIN_AUDIBLE_LEVEL = 0.00760  # 20 uPascals
+MIN_AUDIBLE_LEVEL = 0.00727  # 20 uPascals
 
 class Soundtrack(ManagedClass):
 
@@ -40,7 +40,7 @@ class Soundtrack(ManagedClass):
         # iterate over the block.
         sum_squares = 0.0
         for sample in block:
-            norm_sample = sample  * SHORT_NORMALIZE
+            norm_sample = sample * SHORT_NORMALIZE
             sum_squares += norm_sample * norm_sample
 
         return math.sqrt(sum_squares / block.size)

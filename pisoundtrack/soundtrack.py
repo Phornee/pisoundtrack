@@ -114,7 +114,7 @@ class Soundtrack(ManagedClass):
                 num_seconds += 1
 
             # Decibel conversion
-            silence_raw_level = 280
+            silence_raw_level = 0
 
             if silence_raw_level > max_read:
                 decibels = 0

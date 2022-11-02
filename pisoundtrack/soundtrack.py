@@ -35,7 +35,8 @@ class Soundtrack(ManagedClass):
         # RMS amplitude is defined as the square root of the
         # mean over time of the square of the amplitude.
 
-        SHORT_NORMALIZE = (1.0 / 32768.0)
+        # SHORT_NORMALIZE = (1.0 / 32768.0)
+        SHORT_NORMALIZE = (1.0 / 26000.0)
 
         # iterate over the block.
         sum_squares = 0.0

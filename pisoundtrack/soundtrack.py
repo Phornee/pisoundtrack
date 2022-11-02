@@ -46,17 +46,6 @@ class Soundtrack(ManagedClass):
 
         return math.sqrt(sum_squares / block.size)
 
-    def get_max(self, block):
-        # Ge peak sample normalized to 0..1
-        # iterate over the block.
-        max_amplitude = 0.0
-        for sample in block:
-            norm_sample = sample
-            if norm_sample > max_amplitude:
-                max_amplitude = norm_sample
-
-        return max_amplitude
-
     def sensorRead(self):
         """
         Read sensors information
@@ -71,7 +60,6 @@ class Soundtrack(ManagedClass):
         pyaud = pyaudio.PyAudio()
 
         device_name = u'WordForum USB: Audio'
-        device_rate = 0
 
         print("Getting devices...")
         info = pyaud.get_host_api_info_by_index(0)
@@ -103,26 +91,18 @@ class Soundtrack(ManagedClass):
             num_seconds = 0
             max_read = 0
             while num_seconds < 60:
-                raws = stream.read(input_frames_per_block, exception_on_overflow=False)
-                samples = numpy.fromstring(raws, dtype=numpy.int16)
+                raw = stream.read(input_frames_per_block, exception_on_overflow=False)
+                samples = numpy.frombuffer(raw, dtype=numpy.int16)
                 rms = self.get_rms(samples)
                 if rms > max_read:
                     max_read = rms
                 print("{:.2f}".format(rms))
-                # raw_max = self.get_max(samples)
-                # if raw_max > max_read:
-                #     max_read = raw_max
-                # print("{:.2f}".format(raw_max))
-
                 num_seconds += 1
 
             # Decibel conversion
-            silence_raw_level = 0.0
-
-            if silence_raw_level > max_read:
+            if MIN_AUDIBLE_LEVEL > max_read:
                 decibels = 0.0
             else:
-                # decibels = 20 * math.log10(float(max_read - silence_raw_level) * SHORT_NORMALIZE)
                 decibels = 20 * math.log10(max_read/MIN_AUDIBLE_LEVEL)
 
             self.logger.info("Decibels = {}".format(decibels))

@@ -1,14 +1,6 @@
 pin: 2
 id: 0
 logpath: log
-mariadbconn:
-  user: ++++++++++
-  password: ++++++++++++
-  host: +++.+++.+++.+++
-  port: ++++
-  database: +++++++++
-mongodbconn:
-  connstring: mongodb+srv://user:urlencodedpassword@cluster0.xxxxx.mongodb.net/defaultdatabase?retryWrites=true&w=majority"
 influxdbconn:
   host: pi00
   bucket: hometelemetry

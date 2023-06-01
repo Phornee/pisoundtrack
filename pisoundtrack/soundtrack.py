@@ -1,34 +1,38 @@
-
-from influxdb import InfluxDBClient, client
-from baseutils_phornee import ManagedClass
-from baseutils_phornee import Logger
-from baseutils_phornee import Config
+""" """
+import os
 from datetime import datetime
+from pathlib import Path
 import math
-import struct
+
+import numpy
+import pyaudio
+
+from influxdb_wrapper import influxdb_factory
+from log_mgr import Logger
+from config_yml import Config
 
 SHORT_NORMALIZE = (1.0 / 32768.0)
 INPUT_BLOCK_TIME = 0.10
 SILENCE_SAMPLE_LEVEL = 251
 MIN_AUDIBLE_LEVEL = 0.00727  # 20 uPascals
 
-class Soundtrack(ManagedClass):
 
-    def __init__(self):
-        super().__init__(execpath=__file__)
-        self.logger = Logger({'modulename': self.getClassName(), 'logpath': 'log', 'logname': 'soundtrack'})
+class Soundtrack():
+    def __init__(self, dry_run: bool = False):
+        self.logger = Logger(self.class_name(), 'soundtrack', dry_run=dry_run)
         self.logger.info("Initializing Soundtrack...")
-        self.config = Config({'modulename': self.getClassName(), 'execpath': __file__})
+        template_config_path = os.path.join(Path(__file__).parent.resolve(), './config-template.yml')
 
-        host = self.config['influxdbconn']['host']
-        user = self.config['influxdbconn']['user']
-        password = self.config['influxdbconn']['password']
-        bucket = self.config['influxdbconn']['bucket']
+        self.config = Config(package_name=self.class_name(),
+                             template_path=template_config_path,
+                             config_file_name="config.yml")
 
-        self.conn = InfluxDBClient(host=host, username=user, password=password, database=bucket)
+        influx_conn_type = self.config['influxdbconn'].get('type', 'influx')
+        self.conn = influxdb_factory(influx_conn_type)
+        self.conn.openConn(self.config['influxdbconn'])
 
     @classmethod
-    def getClassName(cls):
+    def class_name(cls):
         return "soundtrack"
 
     def get_rms(self, block):
@@ -52,9 +56,6 @@ class Soundtrack(ManagedClass):
         """
         have_readings = False
 
-        import numpy
-        import pyaudio
-
         print("Initializing Pyaudio....")
         self.logger.info("Initializing Pyaudio...")
         pyaud = pyaudio.PyAudio()
@@ -67,19 +68,19 @@ class Soundtrack(ManagedClass):
         input_device = -1
         for i in range(0, num_devices):
             device_info = pyaud.get_device_info_by_host_api_device_index(0, i)
-            print("Evaluating device {}...".format(device_info.get('name')))
+            print(f"Evaluating device {device_info.get('name')}...")
             if device_info.get('name').startswith(device_name):
                 if (device_info.get('maxInputChannels')) > 0:
                     sampling_rate = int(device_info.get('defaultSampleRate'))
-                    print("Input Device id {} - {}".format(i, device_info.get('name')))
-                    print("Sampling Rate - {}".format(sampling_rate))
+                    print(f"Input Device id {i} - {device_info.get('name')}")
+                    print(f"Sampling Rate - {sampling_rate}")
                     input_device = i
                     break
                 else:
-                    self.logger.error("Device {} has no input channels.".format(device_name))
+                    self.logger.error(f"Device {device_name} has no input channels.")
 
         if input_device == -1:
-            self.logger.error("Input Device {} not found.".format(device_name))
+            self.logger.error(f"Input Device {device_name} not found.")
             return -1
 
         input_frames_per_block = int(sampling_rate * INPUT_BLOCK_TIME)
@@ -105,8 +106,8 @@ class Soundtrack(ManagedClass):
             else:
                 decibels = 20 * math.log10(max_read/MIN_AUDIBLE_LEVEL)
 
-            self.logger.info("Decibels = {}".format(decibels))
-            json_body = [
+            self.logger.info(f"Decibels = {decibels}")
+            points = [
                 {
                     "measurement": "sound",
                     "tags": {
@@ -122,11 +123,12 @@ class Soundtrack(ManagedClass):
                 }
             ]
             try:
-                self.conn.write_points(json_body)
-            except Exception as e:
-                self.logger.error("RuntimeError: {}".format(e))
-                self.logger.error("influxDBURL={} | influxDBToken={}".format(self.config['influxdbconn']['url'],
-                                                                             self.config['influxdbconn']['token']))
+                self.conn.insert("DHT22", points)
+            except Exception as ex:
+                self.logger.error(f"RuntimeError: {ex}")
+                url = self.config['influxdbconn']['url']
+                token = self.config['influxdbconn']['token']
+                self.logger.error(f"influxDBURL={url} | influxDBToken={token}")
 
 if __name__ == "__main__":
     sensors_instance = Soundtrack()

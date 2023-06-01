@@ -109,11 +109,9 @@ class Soundtrack():
             self.logger.info(f"Decibels = {decibels}")
             points = [
                 {
-                    "measurement": "sound",
                     "tags": {
                         "soundid": self.config['id']
                     },
-                    "time": datetime.utcnow(),
                     "fields": {
                         "max": float(max_read),
                         "max_raw": float(max_read / SHORT_NORMALIZE),
@@ -122,8 +120,9 @@ class Soundtrack():
                     }
                 }
             ]
+
             try:
-                self.conn.insert("DHT22", points)
+                self.conn.insert("sound", points)
             except Exception as ex:
                 self.logger.error(f"RuntimeError: {ex}")
                 url = self.config['influxdbconn']['url']

@@ -1,4 +1,4 @@
-name: Publish to PyPI
+name: Test & Publish to TestPyPI
 on: 
   push:
     branches: [ master ]
@@ -22,17 +22,31 @@ jobs:
         with:
           python-version: "3.9"
       
-      # Install dependencies
-      - name: "Installs dependencies"
+      # Installs and upgrades pip, installs other dependencies and installs the package from setup.py
+      - name: "Installs and upgrades pip, installs other dependencies and installs the package from setup.py"
         run: |
+          # Upgrade pip
           python3 -m pip install --upgrade pip
+          # Install build deps
           python3 -m pip install setuptools wheel twine
-      
-      # Build and upload to PyPI
-      - name: "Builds and uploads to PyPI"
+          # If requirements.txt exists, install from it
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          # Install the package from setup.py
+          python3 setup.py install
+
+      # Tests with unittest
+      - name: Test with unittest
+        run: |
+          cd tests
+          python3 -m unittest discover
+          cd ..
+
+      # Upload to TestPyPI
+      - name: Build and Upload to TestPyPI
         run: |
           python3 setup.py sdist bdist_wheel
           python3 -m twine upload --skip-existing dist/*
         env:
           TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_TEST_API_TOKEN }}
+          TWINE_REPOSITORY: testpypi

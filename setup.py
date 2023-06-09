@@ -26,7 +26,8 @@ setuptools.setup(
         'config_yml>=0.3.1',
         'log_mgr>=0.0.2',
         'influxdb>=5.3.1',
-        'numpy>=1.21.5'
+        'numpy>=1.21.5',
+        'pyaudio>=0.2.11'
     ],
     python_requires='>=3.6',
 )

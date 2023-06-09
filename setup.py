@@ -25,7 +25,7 @@ setuptools.setup(
     install_requires=[
         'config_yml>=0.3.1',
         'log_mgr>=0.0.2',
-        'influxdb>=5.3.1',
+        'influxdb_wrapper>=0.0.5',
         'numpy>=1.21.5',
         'pyaudio==0.2.11'
     ],

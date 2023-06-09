@@ -32,7 +32,7 @@ jobs:
           # If requirements.txt exists, install from it
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           # install portaudio
-          apt install portaudio19-dev
+          sudo apt install portaudio19-dev
           # Install the package from setup.py
           python3 setup.py install
 
